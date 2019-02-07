@@ -26,6 +26,8 @@ app.use(function(req, res, next) {
 
 app.use('/', indexRouter);
 
+AWS.config.loadFromPath('./aws-credentials.json');
+
 var s3 = new AWS.S3({apiVersion: '2006-03-01'});
 var bucket = 'struhs-spotify-clone';
 s3.listObjectsV2({ Bucket: bucket }, function(err, data) {
