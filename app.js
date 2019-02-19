@@ -37,11 +37,3 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
-
-
-// return new Promise(resolve -> {
-//   s3.getSignedUrl('getObject', params, (err, url) => {
-//     // build data structure
-//     resolve(data)
-//   })
-// })

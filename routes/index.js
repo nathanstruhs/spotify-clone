@@ -5,6 +5,20 @@ var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./aws-credentials.json');
 let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 let bucket = 'struhs-spotify-clone';
+let docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
+
+router.get('/genres', function(req, res, next) {
+  const params = { TableName : 'music' }
+  docClient.scan(params, function(err, data) {
+    if (err) {
+      console.log(err);
+    } else {
+      let genres = new Set();
+      data.Items.forEach(item => genres.add(item.genre));
+      res.send([...genres]);
+    }
+  });
+})
 
 router.get('/', function(req, res, next) {
   s3.listObjectsV2({ Bucket: bucket }, function(err, data) {
