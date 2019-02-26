@@ -5,7 +5,20 @@ var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./aws-credentials.json');
 let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 let bucket = 'struhs-spotify-clone';
-let docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
+let docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10', region: 'us-east-1'});
+
+
+router.get('/all', function(req, res, next) {
+  const params = { TableName : 'music' }
+  docClient.scan(params, function(err, data) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(data.Items);
+    }
+  });
+});
+
 
 router.get('/genres', function(req, res, next) {
   const params = { TableName : 'music' }
@@ -18,7 +31,91 @@ router.get('/genres', function(req, res, next) {
       res.send([...genres]);
     }
   });
+});
+
+router.get('/artist/for/genre', function(req, res, next) {
+  const genre = req.query.genre;
+  const params = {
+    TableName: 'music',
+    KeyConditionExpression: "#genre = :genre",
+    ExpressionAttributeNames:{
+      "#genre": "genre"
+    },
+    ExpressionAttributeValues: {
+      ":genre":genre
+    }
+  };
+
+  docClient.query(params, function(err, data) {
+    if (err) {
+      console.log(err)
+    } else {
+      let artists = new Set();
+      data.Items.forEach(item => artists.add(item.artist_album_song.substr(0, item.artist_album_song.indexOf('_'))));
+      res.send([...artists]);
+    }
+  });
+});
+
+router.get('/albums/for/artist', function(req, res, next) {
+  const artist = req.query.artist;
+  const params = { TableName : 'music' }
+  docClient.scan(params, function(err, data) {
+    if (err) {
+      console.log(err);
+    } else {
+      let albums = new Set();
+      data.Items.forEach(item => {
+        if (item.artist == artist) {
+          console.log(item.artist)
+          console.log(artist)
+          console.log(item.artist_album_song)
+          albums.add(item.artist_album_song.split('_')[1])
+        }
+      });
+      res.send([...albums]);
+    }
+  });
 })
+
+
+
+router.get('/songs/for/album', function(req, res, next) {
+  const album = req.query.album;
+  const params = { TableName : 'music' }
+  docClient.scan(params, function(err, data) {
+    if (err) {
+      console.log(err);
+    } else {
+      let songs = [];
+      data.Items.forEach(item => {
+        if (item.artist_album_song.split('_')[1] == album) {
+          songs.push(item.artist_album_song.split('_')[2])
+        }
+      });
+      res.send(songs);
+    }
+  });
+})
+
+router.get('/song', function(req, res, next) {
+  const song = req.query.song;
+  const params = { TableName : 'music' }
+  docClient.scan(params, function(err, data) {
+    if (err) {
+      console.log(err);
+    } else {
+      let songs = [];
+      data.Items.forEach(item => {
+        if (item.artist_album_song.split('_')[2] == song) {
+          const path = item.artist_album_song.replace(/_/g,'/');
+          res.send(s3.getSignedUrl('getObject', { Bucket: bucket, Key: path }));
+        }
+      });
+    }
+  });
+})
+
 
 router.get('/', function(req, res, next) {
   s3.listObjectsV2({ Bucket: bucket }, function(err, data) {
