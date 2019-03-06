@@ -8,6 +8,7 @@
   "dependencies": {
     "aws-sdk": "^2.397.0",
     "cookie-parser": "~1.4.3",
+    "cors": "^2.8.5",
     "debug": "~2.6.9",
     "dynamodb-doc": "^1.0.0",
     "ejs": "~2.5.7",
