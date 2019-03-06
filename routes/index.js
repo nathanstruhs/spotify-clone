@@ -7,6 +7,30 @@ let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 let bucket = 'struhs-spotify-clone';
 let docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10', region: 'us-east-1'});
 
+router.post('/save-user', function (req, res) {
+  console.log('save user')
+  console.log(req.body)
+
+  let id = req.body.id,
+      name = req.body.name,
+      email = req.body.email;
+
+  let params = {
+    TableName : 'users',
+    Item: {
+        "id": id,
+        "name": name,
+        "email": email
+    }
+  };
+
+  docClient.put(params, function(err, data) {
+    if (err) {
+        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+    }
+  });
+})
+
 
 router.get('/all', function(req, res, next) {
   const params = { TableName : 'music' }
