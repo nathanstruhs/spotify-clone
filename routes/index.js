@@ -6,6 +6,44 @@ AWS.config.loadFromPath('./aws-credentials.json');
 let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 let bucket = 'struhs-spotify-clone';
 let docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10', region: 'us-east-1'});
+var sqs = new AWS.SQS({apiVersion: '2012-11-05', region: 'us-east-1'});
+
+router.post('/play', function (req, res) {
+  const artist = req.body.artist,
+    album = req.body.album,
+    song = req.body.song;
+
+  var params = {
+    DelaySeconds: 10,
+    MessageAttributes: {
+      "artist": {
+        DataType: "String",
+        StringValue: artist
+      },
+      "album": {
+        DataType: "String",
+        StringValue: album
+      },
+      "song": {
+        DataType: "String",
+        StringValue: song
+      }
+    },
+    MessageBody: "Spotify clone played song",
+    QueueUrl: "https://sqs.us-east-1.amazonaws.com/739260242084/reporting"
+  };
+
+  sqs.sendMessage(params, function(err, data) {
+    if (err) {
+      console.log("Error", err);
+    } else {
+      console.log("Success", data.MessageId);
+    }
+  });
+
+  console.log('play')
+  console.log(id, name, email)
+})
 
 router.post('/save-user', function (req, res) {
   console.log('save user')
