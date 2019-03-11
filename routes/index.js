@@ -9,6 +9,8 @@ let docClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10', regio
 var sqs = new AWS.SQS({apiVersion: '2012-11-05', region: 'us-east-1'});
 
 router.post('/play', function (req, res) {
+  console.log('play');
+
   const artist = req.body.artist,
     album = req.body.album,
     song = req.body.song;
@@ -40,9 +42,6 @@ router.post('/play', function (req, res) {
       console.log("Success", data.MessageId);
     }
   });
-
-  console.log('play')
-  console.log(id, name, email)
 })
 
 router.post('/save-user', function (req, res) {
